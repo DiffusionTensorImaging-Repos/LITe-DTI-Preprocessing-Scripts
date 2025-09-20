@@ -1,0 +1,283 @@
+---
+title: "wide_format_Covariates"
+output: html_document
+---
+
+##INSTALL PACKAGES
+```{r}
+
+install.packages("tidyr")
+install.packages("emmeans")
+install.packages("lme4")
+library(dplyr)
+library(psych)
+library(tidyverse)
+library(ggpubr)
+library(stringr)
+library(tidyr)
+library(lme4)
+library(lmerTest)
+library(emmeans)
+library(RColorBrewer)
+library(purrr)
+library(psych)
+```
+
+
+### SET PATHS
+```{r}
+
+#Set Paths
+rootDir <- "/Volumes/DTI/DTI/Rscripts/data"
+figurepath <- "/Volumes/DTI/DTI/Rscripts/figures" 
+
+```
+
+##Read in df with covariates and DTI values already on it, and clean and organize it. 
+### remove motion outliers and participants who need to be removed due to t1 mask issues: 
+exclude: 3080, 3091, 3100, 3076, 3066, 3062, 3061, 3060, 3057, 3044, 3011
+
+
+```{r}
+# ONE BIG DATAFRAME 
+long_format_data <- read.csv("/Volumes/DTI/DTI/Rscripts/MTES_DTI_progress.csv", header = TRUE)
+
+
+### REMOVE OUTLIERS FROM THIS DF (which will have them removed from all subsequent dfs)
+long_format_data <- long_format_data[!long_format_data$subjectID %in% c(3080, 3091, 3100, 3076, 3066, 3062, 3061, 3060, 3057, 3044, 3011), ]
+
+
+# Create a column name for each dti_fa value for each subject based on node number
+data <- long_format_data %>%
+  group_by(subjectID, tractID) %>%
+  mutate(nodeID = paste0(tractID, "_fa", row_number()-1)) %>%
+  ungroup()
+
+# Pivot the data to wide format
+data_wide <- data %>%
+ pivot_wider(
+    id_cols = subjectID,
+    names_from = nodeID,
+    values_from = dki_fa
+  )
+
+```
+
+
+Unique Scores for each subject
+```{r}
+
+#Extract the unique SSM for each subject
+SSM_composite_scores <- long_format_data %>%
+  dplyr::select(subjectID, SSM_composite.x) %>%
+  distinct()
+
+#Extract the unique age for each subject
+age <- long_format_data %>%
+  dplyr::select(subjectID, age) %>%
+  distinct()
+#Extract the unique sex for each subject
+sex <- long_format_data %>%
+  dplyr::select(subjectID, sex) %>%
+  distinct()
+#Extract the unique sex for each subject
+numeric_sex <- long_format_data %>%
+  dplyr::select(subjectID, numeric_sex) %>%
+  distinct()
+
+# Join all the covariates to the wide data
+data_wide_withcovariates <- data_wide %>%
+  left_join(SSM_composite_scores, by = "subjectID") %>%
+  left_join(age, by = "subjectID") %>%
+  left_join(sex, by = "subjectID") %>%
+  left_join(numeric_sex, by = "subjectID")
+
+
+```
+
+
+NEXT --> ICV
+
+```{r}
+
+###WILL UPDATE CODE WHEN ICV IS COMPLETE
+# re-upload csv
+ICV_clean <- read.csv("/Volumes/DTI/DTI/Wave1/derivatives/ICV/icv_results.csv", header = TRUE)
+
+#rename 
+ICV_clean1 <- ICV_clean %>%
+  rename(subjectID = participant_id)
+# extract just 4 digit PID
+ICV_clean1$subjectID <- sub(".*P([0-9]{4})$", "\\1", ICV_clean1$subjectID)
+# Extract unique ICVs
+icv <- ICV_clean1 %>%
+  dplyr::select(subjectID, ICV) %>%
+  distinct()
+#make subject columns compatible
+data_wide_withcovariates$subjectID <- as.character(data_wide_withcovariates$subjectID)
+icv$subjectID <- as.character(icv$subjectID)
+# Join icv to data_wide_withcovariates
+data_wide_withcovariates <- data_wide_withcovariates %>%
+  left_join(icv, by = "subjectID")
+
+```
+
+```{r}
+# Write to a new CSV with all the covariates added
+write_csv(data_wide_withcovariates, "/Volumes/DTI/DTI/Rscripts/data/ssm_wm_data_wide_covariates.csv")
+
+```
+
+
+```{r}
+#List tracts 
+unique_tracts <- unique(long_format_data$tractID)
+# Print the unique tracts
+print(unique_tracts)
+
+###OUR TRACTS OF INTEREST: SLF, Cingulum Bundle, Callosum Forceps Minor
+
+```
+
+
+```{r}
+
+# ORGANIZE INTO SEPERATE DATAFRAMES PER TRACT
+# List of full tract names (no abbreviations)
+tracts <- c("Callosum Superior Frontal", 
+            "Callosum Posterior Parietal", 
+            "Right Inferior Fronto-occipital", 
+            "Callosum Superior Parietal", 
+            "Callosum Temporal", 
+            "Left Inferior Fronto-occipital", 
+            "Left Anterior Thalamic", 
+            "Right Anterior Thalamic", 
+            "Left Cingulum Cingulate", 
+            "Right Cingulum Cingulate", 
+            "Left Corticospinal", 
+            "Right Corticospinal", 
+            "Right Posterior Arcuate", 
+            "Left Vertical Occipital", 
+            "Left Inferior Longitudinal", 
+            "Right Inferior Longitudinal", 
+            "Left Superior Longitudinal", 
+            "Right Superior Longitudinal", 
+            "Left Arcuate", 
+            "Right Arcuate", 
+            "Left Uncinate", 
+            "Right Uncinate", 
+            "Left Posterior Arcuate", 
+            "Callosum Anterior Frontal", 
+            "Callosum Motor", 
+            "Callosum Occipital", 
+            "Right Vertical Occipital", 
+            "Callosum Orbital")
+
+# A list to store separate data frames for each tract
+tract_dfs <- list()
+
+# Loop through the full names of the tracts
+for (tract in tracts) {
+  # Create the pattern to match columns with the full name (including _fa)
+  pattern <- paste0("^", tract, "_fa")
+  
+  # Use grep with the pattern to find matching columns
+  tract_columns <- grep(pattern, colnames(data_wide_withcovariates))
+  
+  # Print debug information
+  if (length(tract_columns) == 0) {
+    cat("No columns found for tract:", tract, "\n")
+  } else {
+    cat("Processing tract:", tract, "with columns:", tract_columns, "\n")
+  }
+  
+  # Extract the column names that matched the pattern
+  tract_column_names <- colnames(data_wide_withcovariates)[tract_columns]
+  
+  # Extract the relevant data (subjectID, tract data, and other covariates)
+  tract_data <- dplyr::select(data_wide_withcovariates, "subjectID", all_of(tract_column_names), "SSM_composite.x", "age", "sex", "ICV", "numeric_sex")
+  
+  # Add the extracted data to the list with tract name as the key
+  tract_dfs[[tract]] <- tract_data
+}
+
+# Save each data frame as a separate CSV file
+outputDir <- "/Volumes/DTI/DTI/Rscripts/data/csv_seperated_by_tract/covariates/"
+
+# Ensure the output directory exists
+if (!dir.exists(outputDir)) {
+  dir.create(outputDir, recursive = TRUE)
+}
+
+# Loop through each tract's data frame and save it as a CSV
+for (tract in names(tract_dfs)) {
+  # Create a filename based on the tract name
+  filename <- paste0(outputDir, gsub(" ", "_", tract), "_data.csv")
+  # Write the data frame to a CSV file
+  write.csv(tract_dfs[[tract]], file = filename, row.names = FALSE)
+}
+
+```
+
+Check for normal distribution of SSM composite
+```{r}
+
+# Create a histogram
+hist(data_wide_withcovariates$SSM_composite.x, main="Histogram of SSM Composite", xlab="SSM Composite", col="lightblue", border="black")
+
+# Create a Q-Q plot
+qqnorm(data_wide_withcovariates$SSM_composite.x)
+qqline(data_wide_withcovariates$SSM_composite.x, col = "red")
+
+
+shapiro.test(data_wide_withcovariates$SSM_composite.x)
+
+###DATA WAS NORMALY DISTRIBUTED
+```
+
+
+```{r}
+
+# Create a histogram
+hist(data_wide_withcovariates$SSM_composite.x, main="Histogram of SSM Composite", xlab="SSM Composite", col="lightblue", border="black")
+
+# Create a Q-Q plot
+qqnorm(data_wide_withcovariates$SSM_composite.x)
+qqline(data_wide_withcovariates$SSM_composite.x, col = "red")
+
+
+shapiro.test(data_wide_withcovariates$SSM_composite.x)
+
+###DATA WAS NORMALY DISTRIBUTED
+```
+
+## sanity checks
+
+# Quality Control # 
+
+(MANN U / T TESTS)
+
+???
+
+# FA, age, math distribution
+hist(average_df$average_dti_fa, main="Histogram of fa", xlab="FA", col="lightblue", border="black")
+qqnorm(result_df$average_dti_fa)
+qqline(result_df$average_dti_fa)
+shapiro.test(result_df$average_dti_fa)
+# math distribution
+hist(result_df$keymath_score, main="Histogram of math", xlab="math", col="lightblue", border="black")
+qqnorm(result_df$keymath_score)
+qqline(result_df$keymath_score)
+shapiro.test(result_df$keymath_score)
+boxplot(result_df$keymath_score)
+# age distribution
+hist(unique_ages$age, main="Histogram of age", xlab="age", col="lightblue", border="black")
+qqnorm(unique_ages$age)
+qqline(unique_ages$age)
+shapiro.test(unique_ages$age)
+# verbal_IQ distribution
+hist(df_tract_clean$verbal_IQ, main="Histogram of IQ", xlab="IQ", col="lightblue", border="black")
+qqnorm(df_tract_clean$verbal_IQ)
+qqline(df_tract_clean$verbal_IQ)
+shapiro.test(df_tract_clean$verbal_IQ)
+

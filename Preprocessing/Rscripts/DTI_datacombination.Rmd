@@ -1,0 +1,45 @@
+---
+title: "DTI_data_combination"
+output: html_document
+---
+### read in DTI and MTES csvs
+```{r}
+
+DTI_variables <- read.csv("/Volumes/DTI/DTI/Rscripts/tract_profiles.csv")
+
+social_media <- read.csv("/Volumes/DTI/DTI/Rscripts/DTI_MTES_CLEANED.csv")
+
+
+
+```
+
+## subset DTI data frames with FA, MD values and recode sessionID to 1
+
+```{r}
+
+
+DTI_variables_clean <- DTI_variables[, !names(DTI_variables) %in% c("dki_kfa", "dki_mk")]
+DTI_variables_clean$sessionID <- 1
+
+```
+
+### subset social media data frame with only ssm composite and PID. Rename PID to subjectID to match DTI output
+
+```{r}
+
+social_media_clean <- social_media[, c("PID", "SSM_composite.x", "age", "numeric_sex", "sex")]
+colnames(social_media_clean)[colnames(social_media_clean) == "PID"] <- "subjectID"
+
+```
+## merge data frames!
+
+```{r}
+dti_socialmedia_clean <- merge(DTI_variables_clean, social_media_clean, by = "subjectID", all = FALSE)
+
+```
+### output CSV!!
+```{r}
+
+write.csv(dti_socialmedia_clean, "/Volumes/DTI/DTI/Rscripts/MTES_DTI_progress.csv", row.names = FALSE)
+
+```
