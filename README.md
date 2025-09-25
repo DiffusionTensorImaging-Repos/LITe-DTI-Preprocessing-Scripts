@@ -39,7 +39,7 @@ The preprocessing folder includes the essential steps required to prepare the di
    Fits the diffusion tensor model to the DWI data to compute key diffusion parameters, such as Eigenvalues and Eigenvectors, from which diffusion metrics are derived.
 
 12. **FLIRT and Convert**  
-   Performs registration using FMRIB's Linear Image Registration Tool (FLIRT) to align the data to a standard space or reference. This step is included but is not run as we're not doing probabilistic tractography in this pipeline.
+   Performs registration using FMRIB's Linear Image Registration Tool (FLIRT) to align the data to a standard space or reference. This step is not needed for AFQ but is run in case we wanted to add probabilistic tractography to this pipeline.
 
 13. **AFQ Prep - BIDS Conversion**  
    Prepares the data in the Brain Imaging Data Structure (BIDS) format. This step ensures that the data can be processed by AFQ (Automated Fiber Quantification), which requires specific file organization. This is crucial for making the data compatible with AFQ.
