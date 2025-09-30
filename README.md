@@ -32,22 +32,22 @@ The preprocessing folder includes the essential steps required to prepare the di
 9. **Eddy Current Correction**  
    Applies corrections for eddy current-induced distortions in the DWI data. Eddy currents are often generated during the rapid switching of gradient fields, causing geometric distortions in the acquired images.
 
-10. **DWI Extraction**  
+11. **DWI Extraction**  
    Extracts the diffusion-weighted images (DWI) from the raw data, isolating the specific data used to calculate diffusion metrics (e.g., Fractional Anisotropy, Mean Diffusivity).
 
-11. **DTI Fit**  
+12. **DTI Fit**  
    Fits the diffusion tensor model to the DWI data to compute key diffusion parameters, such as Eigenvalues and Eigenvectors, from which diffusion metrics are derived.
 
-12. **FLIRT and Convert**  
+13. **FLIRT and Convert**  
    Performs registration using FMRIB's Linear Image Registration Tool (FLIRT) to align the data to a standard space or reference. This step is not needed for AFQ but is run in case we wanted to add probabilistic tractography to this pipeline.
 
-13. **AFQ Prep - BIDS Conversion**  
+14. **AFQ Prep - BIDS Conversion**  
    Prepares the data in the Brain Imaging Data Structure (BIDS) format. This step ensures that the data can be processed by AFQ (Automated Fiber Quantification), which requires specific file organization. This is crucial for making the data compatible with AFQ.
 
-14. **ICV Calculation**  
+15. **ICV Calculation**  
    Computes the Intracranial Volume (ICV), an important measure for brain size and normalization. It is often used in neuroimaging studies as a covariate in analyses.
 
-15. **pyAFQ Tutorial**  
+16. **pyAFQ Tutorial**  
    Provides a tutorial for running pyAFQ (Python-based Automated Fiber Quantification). This step guides you through the process of preparing and running fiber tractography-based analysis of DTI data.
 
 ## Other Files:
