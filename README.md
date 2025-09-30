@@ -32,22 +32,25 @@ The preprocessing folder includes the essential steps required to prepare the di
 9. **Eddy Current Correction**  
    Applies corrections for eddy current-induced distortions in the DWI data. Eddy currents are often generated during the rapid switching of gradient fields, causing geometric distortions in the acquired images.
 
-11. **DWI Extraction**  
+10. **BedpostX Preparation**
+   Moves files into the proper directory structure required to run BedpostX, a tool used for modeling crossing fibers and preparing data for probabilistic tractography. BedpostX itself is not run in this pipeline, since      the Project LITe workflow is designed for AFQ; this step only ensures that files are organized correctly should probabilistic tractography be added later.
+
+12. **DWI Extraction**  
    Extracts the diffusion-weighted images (DWI) from the raw data, isolating the specific data used to calculate diffusion metrics (e.g., Fractional Anisotropy, Mean Diffusivity).
 
-12. **DTI Fit**  
+13. **DTI Fit**  
    Fits the diffusion tensor model to the DWI data to compute key diffusion parameters, such as Eigenvalues and Eigenvectors, from which diffusion metrics are derived.
 
-13. **FLIRT and Convert**  
+14. **FLIRT and Convert**  
    Performs registration using FMRIB's Linear Image Registration Tool (FLIRT) to align the data to a standard space or reference. This step is not needed for AFQ but is run in case we wanted to add probabilistic tractography to this pipeline.
 
-14. **AFQ Prep - BIDS Conversion**  
+15. **AFQ Prep - BIDS Conversion**  
    Prepares the data in the Brain Imaging Data Structure (BIDS) format. This step ensures that the data can be processed by AFQ (Automated Fiber Quantification), which requires specific file organization. This is crucial for making the data compatible with AFQ.
 
-15. **ICV Calculation**  
+16. **ICV Calculation**  
    Computes the Intracranial Volume (ICV), an important measure for brain size and normalization. It is often used in neuroimaging studies as a covariate in analyses.
 
-16. **pyAFQ Tutorial**  
+17. **pyAFQ Tutorial**  
    Provides a tutorial for running pyAFQ (Python-based Automated Fiber Quantification). This step guides you through the process of preparing and running fiber tractography-based analysis of DTI data.
 
 ## Other Files:
