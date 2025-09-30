@@ -1,6 +1,6 @@
 # Welcome to Project LITe (Long Term Impact of Technology) Diffusion Tensor Imaging Pipeline
 
-### Authored by: Danny Z for the Control and Adaptive Behavior Lab (CABLab) under Dr. Jason Chein
+### Authored by: Danny Zweben for the Control and Adaptive Behavior Lab (CABLab) under Dr. Jason Chein
 
 ## Preprocessing Folder:
 The preprocessing folder includes the essential steps required to prepare the diffusion tensor imaging (DTI) data for analysis. Each step is designed to ensure that the data is cleaned, aligned, and ready for further processing. Below are the steps included:
